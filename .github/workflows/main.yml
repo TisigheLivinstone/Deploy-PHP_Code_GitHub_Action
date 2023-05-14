@@ -1,40 +1,22 @@
-name: CI/CD Pipeline
+name: Deploy to FTP
+
 on:
   push:
     branches:
       - main
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: |
-          echo "Building code..."
-          php composer.phar install
-          php artisan migrate
-          php artisan serve
-  test:
-    runs-on: ubuntu-latest
-    needs: [build]
-    steps:
-      - uses: actions/checkout@v2
-      - run: |
-          echo "Testing code..."
-          phpunit
   deploy:
     runs-on: ubuntu-latest
-    needs: [build, test]
     steps:
       - uses: actions/checkout@v2
-      - run: |
-          echo "Deploying code..."
-          scp -r ./public/ ftp://epiz_34203858:COifH15wVgtu@ftpupload.net/public_html/
-  deploy-staging:
-    runs-on: ubuntu-latest
-    if: github.event.branch == 'master'
-    needs: [build, test, deploy]
-    steps:
-      - uses: actions/checkout@v2
-      - run: |
-          echo "Deploying code to staging..."
-          scp -r ./public/ ftp://epiz_34203858:COifH15wVgtu@ftpupload.net/public_html/staging/
+      - name: Install PHP
+        run: sudo apt-get install php
+      - name: Install Composer
+        run: composer install
+      - name: Build PHP code
+        run: php artisan build
+      - name: Run unit tests
+        run: php vendor/bin/phpunit
+      - name: Deploy to FTP
+        run: php artisan deploy
